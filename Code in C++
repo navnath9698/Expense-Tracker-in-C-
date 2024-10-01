@@ -1,0 +1,279 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <vector>
+#include <string>
+#include <sstream>
+
+using namespace std;
+
+class signupLogin 
+{
+	public:
+    	int id;
+    	string password, name, EmailID;
+    	
+    	void signUP() 
+		{
+        	cout << "<-----------Sign-Up---------->" << endl;
+        	cout << ">>Enter Username: ";
+        	cin >> name;
+       		cout << ">>Enter Email ID: ";
+        	cin >> EmailID;
+        	cout << ">>Enter User ID: ";
+        	cin >> id;
+        	cout << ">>Enter Password: ";
+        	cin >> password;
+        	ofstream file;
+        	file.open("users.txt", ios::app);
+        	
+       		if (file.is_open()) 
+			{
+            	file << id << " " << password << " " << name << " " << EmailID << endl;
+            	file.close();
+            	cout << "Signed Up Successfully!" << endl;
+            	login();
+        	} 
+			else 
+			{
+            	cout << "Error ! Unable to open file!" << endl;
+        	}
+    	}
+    	
+    	void login() 
+		{
+        	int inputID;
+        	string inputPassword;
+            int SID;
+            string SP, SN, SE ;
+        	cout << "<-----------Login------------>" << endl;
+        	cout << ">>Enter User ID: ";
+        	cin >> inputID;
+       		cout << ">>Enter Password: ";
+        	cin >> inputPassword;
+        	ifstream file("users.txt");
+        	if (file.is_open()) 
+			{
+            	bool loginSuccess = false;
+            	while (file >> SID >> SP >> SN >> SE) 
+			{
+                if (SID == inputID && SP == inputPassword) 
+				{
+                    cout << "Logged In Successfully! Welcome, " << SN << "." << endl;
+                    loginSuccess = true;
+                    break;
+                }
+            }
+            
+            file.close();
+            if (!loginSuccess) 
+			{
+                cout << "Login Error! Make sure your ID and password both are correct." << endl;
+            }
+		 	else
+			{
+            	cout << "Error ! Unable to open file!" << endl;
+        	}
+    	}
+    }
+};
+
+
+class ExpenseTracker 
+{
+public:
+	
+    int id;
+    string date, category, description;
+    float amount;
+    
+public:
+	
+    void addExpense() 
+	{
+        cout << "<------------- Add Expenses ------------>" << endl;
+        cout << "Enter ID: ";
+		cin>>id;
+        cout << "Enter Date (YYYY-MM-DD): ";
+        cin >> date;
+        cout << "Enter Category of Expenses: ";
+        cin.ignore();
+        getline(cin, category);
+        cout << "Enter Amount: ";
+        cin>>amount;
+        cout << "Enter Description: ";
+        cin.ignore(); 
+        getline(cin, description);
+
+        saveToFile();
+        cout << "Expense Added Successfully!" << endl;
+    }
+    
+    void viewExpense() 
+	{
+        cout << "<------------- View Expenses ------------>" << endl;
+        cout << setw(10) << "ID"
+             << setw(15) << "Date"
+             << setw(20) << "Category"
+             << setw(10) << "Amount"
+             << setw(30) << "Description" << endl;
+        cout << string(85, '-') << endl;
+        ifstream file("C:\\Users\\Admin\\Desktop\\Expensestracer\\Expenses.txt");
+        if (!file.is_open()) 
+		{
+            cout << "Error: Could not open the file!" << endl;
+            return;
+        }
+        string line;
+        while (getline(file, line)) 
+		{
+            cout << line << endl; 
+        }
+        file.close();
+    }
+    
+    void updateExpenses() 
+	{
+        cout << "<------------- Update Expenses ------------>" << endl;
+        int idToUpdate;
+        cout << "Enter the ID of the expense to update: ";
+        cin >> idToUpdate;
+        vector<string> expenses; 
+        ifstream file("C:\\Users\\Admin\\Desktop\\Expensestracer\\Expenses.txt");
+        if (!file.is_open()) 
+		{
+            cout << "Error: Could not open the file!" << endl;
+            return;
+        }
+        string line;
+        bool found = false;
+        while (getline(file, line)) 
+		{
+            expenses.push_back(line); 
+            if (line.find("ID: " + to_string(idToUpdate)) != string::npos) 
+			{
+                found = true;
+                cout << "Current Expense: " << line << endl;
+            }
+        }
+        file.close();
+        if (!found) 
+		{
+            cout << "Error: Expense with ID " << idToUpdate << " not found!" << endl;
+            return;
+        }
+        string newDate, newCategory, newDescription;
+        float newAmount;
+        string amountInput;
+        cout << "Enter new Date (YYYY-MM-DD) (leave blank to keep unchanged): ";
+        cin.ignore(); 
+        getline(cin, newDate);
+        cout << "Enter new Category of Expenses (leave blank to keep unchanged): ";
+        getline(cin, newCategory);
+        cout << "Enter new Amount (leave blank to keep unchanged): ";
+        getline(cin, amountInput);
+        cout << "Enter new Description (leave blank to keep unchanged): ";
+        getline(cin, newDescription);
+        for (auto& expense : expenses) 
+		{
+            if (expense.find("ID: " + to_string(idToUpdate)) != string::npos) 
+			{
+                if (!newDate.empty()) 
+				{
+                    expense.replace(expense.find("Date: ") + 6, 10, newDate);
+                }
+                if (!newCategory.empty()) 
+				{
+                    expense.replace(expense.find("Category: ") + 11, expense.find(", Amount:") - (expense.find("Category: ") + 11), newCategory);
+                }
+                if (!amountInput.empty()) 
+				{
+                    float updatedAmount = stof(amountInput);
+                    expense.replace(expense.find("Amount: ") + 8, expense.find(", Description:") - (expense.find("Amount: ") + 8), to_string(updatedAmount));
+                }
+                if (!newDescription.empty()) 
+				{
+                    expense.replace(expense.find("Description: ") + 13, string::npos, newDescription);
+                }
+                break;
+            }
+        }
+        ofstream outFile("C:\\Users\\Admin\\Desktop\\Expensestracer\\Expenses.txt");
+        for (const auto& expense : expenses) 
+		{
+            outFile << expense << endl;
+        }
+        outFile.close();
+
+        cout << "Expense updated successfully!" << endl;
+    }
+private:
+    void saveToFile() 
+	{
+        ofstream file("C:\\Users\\Admin\\Desktop\\Expensestracer\\Expenses.txt", ios::app);
+        if (file.is_open()) 
+		{
+            file << "ID: " << id << ", "
+                 << "Date: " << date << ", "
+                 << "Category: " << category << ", "
+                 << "Amount: " << fixed << setprecision(2) << amount << ", "
+                 << "Description: " << description << endl;
+            file.close();
+        } 
+		else 
+		{
+            cout << "Unable to open file!" << endl;
+        }
+    }
+};
+
+int main() 
+{
+	signupLogin s;
+    ExpenseTracker tracker;
+    int choice;
+
+    do 
+	{
+		cout<<"___________________________________________________________________"<<endl;
+		cout<<"-------------------------------------------------------------------"<<endl;
+		cout<<"<                      * Expense Tracker *                        >"<<endl;
+		cout<<"-------------------------------------------------------------------"<<endl;
+		cout<<"___________________________________________________________________"<<endl;
+		
+		cout << ">> 1. Sign-Up "<<endl;
+		cout << ">> 2. Login"<<endl;
+        cout << ">> 3. Add Expense" << endl;
+        cout << ">> 4. View Expenses" << endl;
+        cout << ">> 5. Update Expense" << endl;
+        cout << ">> 6. Exit" << endl;
+        cout << "\t >>>  Enter your choice: ";
+        cin >> choice;
+        switch (choice) 
+		{
+			case 1:
+				s.signUP();
+				break;
+			case 2:
+				s.login();
+				break;
+            case 3:
+                tracker.addExpense();
+                break;
+            case 4:
+                tracker.viewExpense();
+                break;
+            case 5:
+                tracker.updateExpenses();
+                break;
+            case 6:
+                cout << "Exiting..." << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+    } 
+	while (choice != 4);
+
+    return 0;
+}
